@@ -1,32 +1,8 @@
 import tkinter as tk
 import random
-
-class Button(tk.Button):
-    def __init__(self, root, x_cord, y_cord, class_ref,  *args, **kwargs):
-        super().__init__(root, *args, **kwargs)
-
-        self.class_ref = class_ref
-
-        self.x_cord = x_cord
-        self.y_cord = y_cord
-
-        self.isPressed = False
-        self.Value = 0
-
-    def button_click(self):
-        if self.isPressed is False:
-            self.isPressed = True
-            self.configure(relief='groove', state='disabled', bg='#BDBDBD', borderwidth=2)
-            if self.Value != 0:
-                self.configure(text=str(self.Value))
-            else:
-                self.class_ref.flood_fill(self)
-
-    def button_side_click(self):
-        self.isPressed = True
-        self.configure(relief='groove', state='disabled', bg='#BDBDBD', borderwidth=2)
-        self.configure(text=str(self.Value))
-            
+import time
+from PIL import Image, ImageTk
+from Button import Button
 
 class Mine_Sweeper(tk.Frame):
 
@@ -36,7 +12,7 @@ class Mine_Sweeper(tk.Frame):
 
     bomb_max = {'easy': 10, 'medium': 40, 'hard': 99}
 
-    def __init__(self, root, game_mode='easy'):
+    def __init__(self, root, image_dict, game_mode='easy'):
         super().__init__()
 
         self.root = root
@@ -47,27 +23,28 @@ class Mine_Sweeper(tk.Frame):
         # A grid filled with button objects
         self.grid = []
 
-        # Button Width and height defined
-        self.width = 2
-        self.height = 1
-
         # Get the maximum no. of bombs for the specified gamemode
         self.num_of_bombs = self.bomb_max[game_mode]
 
         # Contains a list to contain all the bomb locations
         self.bomb_location_list = []
 
+        # Contains a dictionary of all the assets. 
+        self.image_dict = image_dict
+
         # Assemble the game
         self.main()
+
 
     def main(self):
         """ Initialize the game """
         self.create_grid()
         self.create_bombs()
         self.update_button_scores()
+        #self.set_images()
         #self.show_all_nums()
 
-
+    
     def create_grid(self):
         """ Creates the object's grid filled with button objects """
         x_max, y_max = self.grid_size
@@ -77,7 +54,7 @@ class Mine_Sweeper(tk.Frame):
         for x_cord in range(x_max):
             small_list = []
             for y_cord in range(y_max):
-                button = Button(self.root, x_cord, y_cord, class_ref=cls_ref, width=2, height=1)
+                button = Button(root = self.root, x_cord = x_cord, y_cord = y_cord, class_ref=cls_ref, image_dict=self.image_dict, image=self.image_dict[0])
                 button.configure(command = button.button_click)
                 button.grid(row=x_cord, column=y_cord)
                 small_list.append(button)
@@ -88,7 +65,6 @@ class Mine_Sweeper(tk.Frame):
         
         for i in range(self.num_of_bombs):
             # Update the button's value to indicate bomb
-            #print(random_x, random_y)
             x_cord, y_cord = self.get_random_coord()
             self.grid[x_cord][y_cord].Value = -1
 
@@ -110,25 +86,25 @@ class Mine_Sweeper(tk.Frame):
 
     def update_button_scores(self):
         for bomb_location in self.bomb_location_list:
-            print('===================BOMB at location ({}) finished ======================'.format(bomb_location))
+            #print('===================BOMB at location ({}) finished ======================'.format(bomb_location))
             x_cord, y_cord = bomb_location
             for x in range(x_cord-1, x_cord+2):
                 for y in range(y_cord-1, y_cord+2):
                     try:
                         assert 0 <= x and x < self.grid_size[0]
-                        assert 0 <= y and y < self.grid_size[0]
+                        assert 0 <= y and y < self.grid_size[1]
 
                         val = self.grid[x][y].Value
                         if val != -1:
                             self.grid[x][y].Value += 1
-                            print('Button at ( {}, {} ) had value changed from {} to {}'.format(x, y, val, self.grid[x][y].Value))
+                            #print('Button at ( {}, {} ) had value changed from {} to {}'.format(x, y, val, self.grid[x][y].Value))
                     except:
                         continue
 
 
     def flood_fill(self, button):
         x,y = button.x_cord,button.y_cord
-        print(x, y)
+        #print(x, y)
         for i in range(4):
             if i == 0:
                 try:
@@ -140,7 +116,7 @@ class Mine_Sweeper(tk.Frame):
                     if val == 0:
                         new_button.button_click()
                         #self.flood_fill(new_button)
-                    else:
+                    elif val != -1:
                         new_button.button_side_click()
                 except:
                     continue
@@ -157,7 +133,7 @@ class Mine_Sweeper(tk.Frame):
                     if val == 0:
                         new_button.button_click()
                         #self.flood_fill(new_button)
-                    else:
+                    elif val != -1:
                         new_button.button_side_click()
                 except:
                     continue
@@ -174,7 +150,7 @@ class Mine_Sweeper(tk.Frame):
                     if val == 0:
                         new_button.button_click()
                         #self.flood_fill(new_button)
-                    else:
+                    elif val != -1:
                         new_button.button_side_click()
                 except:
                     continue
@@ -191,7 +167,7 @@ class Mine_Sweeper(tk.Frame):
                     if val == 0:
                         new_button.button_click()
                         #self.flood_fill(new_button)
-                    else:
+                    elif val != -1:
                         new_button.button_side_click()
                 except:
                     continue
@@ -202,10 +178,57 @@ class Mine_Sweeper(tk.Frame):
                 if button.Value != 0:
                     button.configure(text=str(button.Value))
 
- 
+
+def gather_images():
+    img_dict = {}
+    image_size = (20,20)
+
+    null_img = Image.open('assets/null.png')
+    null_img = ImageTk.PhotoImage(null_img.resize(image_size, Image.ANTIALIAS))
+
+    one_img = Image.open('assets/1.png')
+    one_img = ImageTk.PhotoImage(one_img.resize(image_size, Image.ANTIALIAS))
+
+    two_img = Image.open('assets/2.png')
+    two_img = ImageTk.PhotoImage(two_img.resize(image_size, Image.ANTIALIAS))
+
+    three_img = Image.open('assets/3.png')
+    three_img = ImageTk.PhotoImage(three_img.resize(image_size, Image.ANTIALIAS))
+
+    four_img = Image.open('assets/4.png')
+    four_img = ImageTk.PhotoImage(four_img.resize(image_size, Image.ANTIALIAS))
+
+    five_img = Image.open('assets/5.png')
+    five_img = ImageTk.PhotoImage(five_img.resize(image_size, Image.ANTIALIAS))
+
+    six_img = Image.open('assets/6.png')
+    six_img = ImageTk.PhotoImage(six_img.resize(image_size, Image.ANTIALIAS))
+
+    seven_img = Image.open('assets/7.png')
+    seven_img = ImageTk.PhotoImage(seven_img.resize(image_size, Image.ANTIALIAS))
+
+    eight_img = Image.open('assets/8.png')
+    eight_img = ImageTk.PhotoImage(eight_img.resize(image_size, Image.ANTIALIAS))
+
+    mine_img = Image.open('assets/-1.png')
+    mine_img = ImageTk.PhotoImage(mine_img.resize(image_size, Image.ANTIALIAS))
+
+    img_dict[0] = null_img
+    img_dict[1] = one_img
+    img_dict[2] = two_img
+    img_dict[3] = three_img
+    img_dict[4] = four_img
+    img_dict[5] = five_img
+    img_dict[6] = six_img
+    img_dict[7] = seven_img
+    img_dict[8] = eight_img
+    img_dict[-1] = mine_img
+    
+    return img_dict
+
 root = tk.Tk()
 
-mine = Mine_Sweeper(root, game_mode='easy')
-
+img = gather_images()
+mine = Mine_Sweeper(root, img, game_mode='easy')
 
 mine.mainloop()
