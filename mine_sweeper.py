@@ -29,10 +29,13 @@ class Mine_Sweeper(tk.Frame):
         # Contains a dictionary of all the assets. 
         self.image_dict = image_dict
 
+        # A grid filled with button objects
+        self.grid = []
+
         self.mid_frame = tk.LabelFrame(root, bd=6)
         self.mid_frame.grid(row=1, columnspan=self.grid_size[1], rowspan=self.grid_size[0])
 
-        self.bottom_frame = self.bottom_frame(root)
+        self.bottom_frame = Bottom_frame(root, self)
 
         # Assemble the game
         self.main()
@@ -50,9 +53,6 @@ class Mine_Sweeper(tk.Frame):
     def create_grid(self):
         """ Creates the object's grid filled with button objects """
         x_max, y_max = self.grid_size
-
-        # A grid filled with button objects
-        self.grid = []
 
         cls_ref = self
 
@@ -184,24 +184,26 @@ class Mine_Sweeper(tk.Frame):
                 if button.Value != 0:
                     button.configure(text=str(button.Value))
 
-    def bottom_frame(self, root):
-        frame = tk.LabelFrame(root, bd=4)
-
-        solve_button = tk.Button(frame, text='SOLVE', bd=3, relief='raised')
-        solve_button.pack(side=tk.LEFT, padx=10, ipadx=10, ipady=1, pady=3)
-
-        retry_button = tk.Button(frame, text='RETRY', bd=3, relief='raised', command=self.reset_game)
-        retry_button.pack(side=tk.RIGHT, padx=10, ipadx=10, ipady=1, pady=3)
-
-        frame.grid(row=self.grid_size[0]+1,ipady=0,columnspan=self.grid_size[1], ipadx=self.grid_size[1]*5) #columnspan=self.grid_size[1], ipady=5, ipadx=self.grid_size[1]*8)
+#columnspan=self.grid_size[1], ipady=5, ipadx=self.grid_size[1]*8)
 
     def reset_game(self):
-        for smal_list in self.grid:
-            for button in smal_list:
-                button.Value = 0
+        self.reset_values()
         self.main()
 
+    def solve_game(self):
+        for smal_list in self.grid:
+            for button in smal_list:
+                button.button_reveal()
+                button.configure(state='disabled', relief='groove')
 
+    def reset_values(self):
+        for small_list in self.grid:
+            for button in small_list:
+                del button
+        del self.bomb_location_list
+        del self.grid
+        self.bomb_location_list = []
+        self.grid = []
 
 def gather_images():
     img_dict = {}
@@ -254,10 +256,39 @@ def gather_images():
     
     return img_dict
 
+class Bottom_frame:
+    def __init__(self, root, class_ref):
+        frame = tk.LabelFrame(root, bd=4)
 
-root = tk.Tk()
+        solve_button = tk.Button(frame, text='SOLVE', bd=3, relief='raised', command=class_ref.solve_game)
+        solve_button.pack(side=tk.LEFT, padx=10, ipadx=10, ipady=1, pady=3)
 
-img = gather_images()
-mine = Mine_Sweeper(root, img, game_mode='easy')
+        retry_button = tk.Button(frame,
+                                      text='RETRY',
+                                      bd=3,
+                                      relief='raised',
+                                      command=class_ref.reset_game
+        )
+        
+        retry_button.pack(side=tk.RIGHT,
+                               padx=10,
+                               ipadx=10,
+                               ipady=1,
+                               pady=3
+        )
 
-mine.mainloop()
+
+        frame.grid(row=class_ref.grid_size[0]+1,
+                        ipady=0,
+                        columnspan=class_ref.grid_size[1],
+                        ipadx=class_ref.grid_size[1]*5
+        )
+
+
+if __name__ == '__main__':
+    root = tk.Tk()
+
+    img = gather_images()
+    mine = Mine_Sweeper(root, img, game_mode='easy')
+
+    mine.mainloop()
