@@ -20,9 +20,6 @@ class Mine_Sweeper(tk.Frame):
         # Get the grid size based on the chosen game-mode
         self.grid_size = self.game_size[game_mode]
 
-        # A grid filled with button objects
-        self.grid = []
-
         # Get the maximum no. of bombs for the specified gamemode
         self.num_of_bombs = self.bomb_max[game_mode]
 
@@ -31,6 +28,11 @@ class Mine_Sweeper(tk.Frame):
 
         # Contains a dictionary of all the assets. 
         self.image_dict = image_dict
+
+        self.mid_frame = tk.LabelFrame(root, bd=6)
+        self.mid_frame.grid(row=1, columnspan=self.grid_size[1], rowspan=self.grid_size[0])
+
+        self.bottom_frame = self.bottom_frame(root)
 
         # Assemble the game
         self.main()
@@ -49,13 +51,17 @@ class Mine_Sweeper(tk.Frame):
         """ Creates the object's grid filled with button objects """
         x_max, y_max = self.grid_size
 
+        # A grid filled with button objects
+        self.grid = []
+
         cls_ref = self
 
         for x_cord in range(x_max):
             small_list = []
             for y_cord in range(y_max):
-                button = Button(root = self.root, x_cord = x_cord, y_cord = y_cord, class_ref=cls_ref, image_dict=self.image_dict, image=self.image_dict[0])
+                button = Button(root = self.mid_frame, x_cord = x_cord, y_cord = y_cord, val=0, class_ref=cls_ref, isPressed = False, image_dict=self.image_dict, image=self.image_dict[0], relief='raised', bd=3)
                 button.configure(command = button.button_click)
+                button.bind("<Button-3>", button.right_click)
                 button.grid(row=x_cord, column=y_cord)
                 small_list.append(button)
             self.grid.append(small_list)
@@ -178,6 +184,24 @@ class Mine_Sweeper(tk.Frame):
                 if button.Value != 0:
                     button.configure(text=str(button.Value))
 
+    def bottom_frame(self, root):
+        frame = tk.LabelFrame(root, bd=4)
+
+        solve_button = tk.Button(frame, text='SOLVE', bd=3, relief='raised')
+        solve_button.pack(side=tk.LEFT, padx=10, ipadx=10, ipady=1, pady=3)
+
+        retry_button = tk.Button(frame, text='RETRY', bd=3, relief='raised', command=self.reset_game)
+        retry_button.pack(side=tk.RIGHT, padx=10, ipadx=10, ipady=1, pady=3)
+
+        frame.grid(row=self.grid_size[0]+1,ipady=0,columnspan=self.grid_size[1], ipadx=self.grid_size[1]*5) #columnspan=self.grid_size[1], ipady=5, ipadx=self.grid_size[1]*8)
+
+    def reset_game(self):
+        for smal_list in self.grid:
+            for button in smal_list:
+                button.Value = 0
+        self.main()
+
+
 
 def gather_images():
     img_dict = {}
@@ -213,6 +237,9 @@ def gather_images():
     mine_img = Image.open('assets/-1.png')
     mine_img = ImageTk.PhotoImage(mine_img.resize(image_size, Image.ANTIALIAS))
 
+    flag_img = Image.open('assets/flag.png')
+    flag_img = ImageTk.PhotoImage(flag_img.resize(image_size, Image.ANTIALIAS))
+
     img_dict[0] = null_img
     img_dict[1] = one_img
     img_dict[2] = two_img
@@ -221,10 +248,12 @@ def gather_images():
     img_dict[5] = five_img
     img_dict[6] = six_img
     img_dict[7] = seven_img
-    img_dict[8] = eight_img
+    img_dict[8] = eight_img     
     img_dict[-1] = mine_img
+    img_dict[9] = flag_img
     
     return img_dict
+
 
 root = tk.Tk()
 

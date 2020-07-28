@@ -1,10 +1,20 @@
 import tkinter as tk
 from PIL import ImageTk, Image
 root = tk.Tk()
-img = Image.open('assets/1.png')
-img = ImageTk.PhotoImage(img.resize((20,20), Image.ANTIALIAS))
-but = tk.Button(root)
-but.pack()
-but.configure(relief='groove', bd=2, state='disabled')
-but.configure(image=img)
+
+top_frame = tk.LabelFrame(root, text='touchy')
+top_frame.grid(row=0, rowspan=5, columnspan=100)
+
+bottom_frame = tk.LabelFrame(top_frame, text='bottom')
+bottom_frame.grid(row=6, columnspan=100)
+
+button_1 = tk.Button(top_frame, text='Clicky')
+button_1.grid(row=0, padx=10)
+
+#button_2 = tk.Button(top_frame, text='Clicky2')
+#button_2.grid(row=0, padx=10)
+
+button_3 = tk.Button(bottom_frame, text='Clicky')
+button_3.pack()
+
 root.mainloop()
