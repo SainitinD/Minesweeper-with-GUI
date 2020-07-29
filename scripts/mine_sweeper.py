@@ -1,9 +1,11 @@
 import tkinter as tk
 import random
-import time
-from PIL import Image, ImageTk
+import copy
+from tkinter import messagebox
+
+from Frames import Bottom_frame#, Top_frame
 from Button import Button
-from time import time
+
 
 class Mine_Sweeper(tk.Frame):
 
@@ -13,8 +15,8 @@ class Mine_Sweeper(tk.Frame):
 
     bomb_max = {'easy': 10, 'medium': 40, 'hard': 99}
 
-    def __init__(self, root, image_dict, game_mode='easy'):
-        super().__init__()
+    def __init__(self, root, image_dict, game_mode='easy', *args, **kwargs):
+        super().__init__(root, *args, **kwargs)
 
         self.root = root
 
@@ -33,14 +35,16 @@ class Mine_Sweeper(tk.Frame):
         # A grid filled with button objects
         self.grid = []
 
-        self.top_frame = Top_frame(root, self)
+        self.flag_count = self.bomb_max[game_mode]
+
+        #self.top_frame = Top_frame(root, self)
 
         self.mid_frame = tk.LabelFrame(root, bd=6)
         self.mid_frame.grid(row=1, columnspan=self.grid_size[1], rowspan=self.grid_size[0])
 
         self.bottom_frame = Bottom_frame(root, self)
 
-        self.flag_count = self.bomb_max[game_mode]
+        self.score = self.grid_size[0] * self.grid_size[1] - self.num_of_bombs
 
         # Assemble the game
         self.main()
@@ -83,10 +87,11 @@ class Mine_Sweeper(tk.Frame):
             self.bomb_location_list.append((x_cord, y_cord))
 
     def get_random_coord(self):
-        max_idx = self.grid_size[0]-1
+        max_x_idx = self.grid_size[0]-1
+        max_y_idx = self.grid_size[1]-1
         while True:
-            random_x = random.randint(0, max_idx)
-            random_y = random.randint(0, max_idx)
+            random_x = random.randint(0, max_x_idx)
+            random_y = random.randint(0, max_y_idx)
 
             coord = (random_x, random_y)
 
@@ -159,7 +164,7 @@ class Mine_Sweeper(tk.Frame):
     def solve_game(self):
         for smal_list in self.grid:
             for button in smal_list:
-                button.button_reveal()
+                button.button_side_click()
                 button.configure(state='disabled', relief='groove')
 
     def reset_values(self):
@@ -168,125 +173,36 @@ class Mine_Sweeper(tk.Frame):
                 del button
         del self.bomb_location_list
         del self.grid
+        del self.flag_count
+        del self.score
+        self.flag_count = copy.copy(self.num_of_bombs)
         self.bomb_location_list = []
         self.grid = []
+        self.score = self.grid_size[0] * self.grid_size[1] - self.num_of_bombs
 
-def gather_images():
-    img_dict = {}
-    image_size = (20,20)
+    def game_over(self):
+        self.disable_buttons()
+        label = messagebox.showinfo("GAME OVER", "YOU LOSE")
+        self.reveal_bombs('lost')
 
-    null_img = Image.open('assets/null.png')
-    null_img = ImageTk.PhotoImage(null_img.resize(image_size, Image.ANTIALIAS))
-
-    one_img = Image.open('assets/1.png')
-    one_img = ImageTk.PhotoImage(one_img.resize(image_size, Image.ANTIALIAS))
-
-    two_img = Image.open('assets/2.png')
-    two_img = ImageTk.PhotoImage(two_img.resize(image_size, Image.ANTIALIAS))
-
-    three_img = Image.open('assets/3.png')
-    three_img = ImageTk.PhotoImage(three_img.resize(image_size, Image.ANTIALIAS))
-
-    four_img = Image.open('assets/4.png')
-    four_img = ImageTk.PhotoImage(four_img.resize(image_size, Image.ANTIALIAS))
-
-    five_img = Image.open('assets/5.png')
-    five_img = ImageTk.PhotoImage(five_img.resize(image_size, Image.ANTIALIAS))
-
-    six_img = Image.open('assets/6.png')
-    six_img = ImageTk.PhotoImage(six_img.resize(image_size, Image.ANTIALIAS))
-
-    seven_img = Image.open('assets/7.png')
-    seven_img = ImageTk.PhotoImage(seven_img.resize(image_size, Image.ANTIALIAS))
-
-    eight_img = Image.open('assets/8.png')
-    eight_img = ImageTk.PhotoImage(eight_img.resize(image_size, Image.ANTIALIAS))
-
-    mine_img = Image.open('assets/-1.png')
-    mine_img = ImageTk.PhotoImage(mine_img.resize(image_size, Image.ANTIALIAS))
-
-    flag_img = Image.open('assets/flag.png')
-    flag_img = ImageTk.PhotoImage(flag_img.resize(image_size, Image.ANTIALIAS))
-
-    img_dict[0] = null_img
-    img_dict[1] = one_img
-    img_dict[2] = two_img
-    img_dict[3] = three_img
-    img_dict[4] = four_img
-    img_dict[5] = five_img
-    img_dict[6] = six_img
-    img_dict[7] = seven_img
-    img_dict[8] = eight_img     
-    img_dict[-1] = mine_img
-    img_dict[9] = flag_img
-    
-    return img_dict
-
-class Bottom_frame:
-    def __init__(self, root, class_ref):
-        frame = tk.LabelFrame(root, bd=7)
-
-        solve_button = tk.Button(frame, text='SOLVE', bd=3, relief='raised', command=class_ref.solve_game)
-        solve_button.pack(side=tk.LEFT, padx=10, ipadx=10, ipady=1, pady=3)
-
-        retry_button = tk.Button(frame,
-                                      text='RETRY',
-                                      bd=3,
-                                      relief='raised',
-                                      command=class_ref.reset_game
-        )
-        
-        retry_button.pack(side=tk.RIGHT,
-                               padx=10,
-                               ipadx=10,
-                               ipady=1,
-                               pady=3
-        )
+    def game_won(self):
+        label = messagebox.showinfo("GAME OVER", "YOU WIN!!!")
+        self.reveal_bombs('won')
 
 
-        frame.grid(row=class_ref.grid_size[0]+1,
-                        ipady=0,
-                        columnspan=class_ref.grid_size[1],
-                        ipadx=class_ref.grid_size[1]*5
-        )
+    def check_game(self):
+        if self.score <= 0:
+            self.game_won()
 
-def get_smile_img():
-    smile_img = Image.open('assets/smile.png')
-    smile_img = ImageTk.PhotoImage(smile_img.resize((20,20), Image.ANTIALIAS))
+    def reveal_bombs(self, result='won'):
+        for bomb_location in self.bomb_location_list:
+            x,y = bomb_location
+            button = self.grid[x][y]
+            button.set_bomb_green(result)
+            button.button_reveal()
 
-    return smile_img
+    def disable_buttons(self):
+        for small_list in self.grid:
+            for button in small_list:
+                button.configure(state='disabled')
 
-class Top_frame:
-    def __init__(self, root, class_ref):
-        frame = tk.LabelFrame(root, bd=7)
-        frame.grid(row=0,
-                        ipady=0,
-                        columnspan=class_ref.grid_size[1],
-                        ipadx=class_ref.grid_size[1]*10
-        )
-
-
-
-        self.t = 'HighScore: '
-        self.label = tk.Label(frame, text=self.t, font='Times 15', relief='sunken')
-        self.label.grid(row=0, column=0, padx=10, ipadx=10, ipady=1, pady=3)
-
-        self.smile_img = Image.open('assets/smile.png')
-        self.smile_img = ImageTk.PhotoImage(self.smile_img.resize((30,25), Image.ANTIALIAS))
-
-        self.class_ref = class_ref
-        #self.smile_img = get_smile_img()
-        self.smile_button = tk.Button(frame, image=self.smile_img, command=self.smile_click)
-        self.smile_button.grid(row=0, column=1, padx=10, ipady=1, pady=3)
-
-    def smile_click(self):
-        self.class_ref.reset_game()
-
-if __name__ == '__main__':
-    root = tk.Tk()
-    root.resizable(width=False, height=False)
-
-    img = gather_images()
-    mine = Mine_Sweeper(root, img, game_mode='easy')
-
-    mine.mainloop()
