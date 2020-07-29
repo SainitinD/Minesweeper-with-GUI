@@ -3,6 +3,7 @@ import random
 import time
 from PIL import Image, ImageTk
 from Button import Button
+from time import time
 
 class Mine_Sweeper(tk.Frame):
 
@@ -32,10 +33,14 @@ class Mine_Sweeper(tk.Frame):
         # A grid filled with button objects
         self.grid = []
 
+        self.top_frame = Top_frame(root, self)
+
         self.mid_frame = tk.LabelFrame(root, bd=6)
         self.mid_frame.grid(row=1, columnspan=self.grid_size[1], rowspan=self.grid_size[0])
 
         self.bottom_frame = Bottom_frame(root, self)
+
+        self.flag_count = self.bomb_max[game_mode]
 
         # Assemble the game
         self.main()
@@ -62,7 +67,7 @@ class Mine_Sweeper(tk.Frame):
                 button = Button(root = self.mid_frame, x_cord = x_cord, y_cord = y_cord, val=0, class_ref=cls_ref, isPressed = False, image_dict=self.image_dict, image=self.image_dict[0], relief='raised', bd=3)
                 button.configure(command = button.button_click)
                 button.bind("<Button-3>", button.right_click)
-                button.grid(row=x_cord, column=y_cord)
+                button.grid(row=x_cord+1, column=y_cord+1)
                 small_list.append(button)
             self.grid.append(small_list)
 
@@ -93,90 +98,51 @@ class Mine_Sweeper(tk.Frame):
     def update_button_scores(self):
         for bomb_location in self.bomb_location_list:
             #print('===================BOMB at location ({}) finished ======================'.format(bomb_location))
-            x_cord, y_cord = bomb_location
-            for x in range(x_cord-1, x_cord+2):
-                for y in range(y_cord-1, y_cord+2):
-                    try:
-                        assert 0 <= x and x < self.grid_size[0]
-                        assert 0 <= y and y < self.grid_size[1]
-
-                        val = self.grid[x][y].Value
-                        if val != -1:
-                            self.grid[x][y].Value += 1
-                            #print('Button at ( {}, {} ) had value changed from {} to {}'.format(x, y, val, self.grid[x][y].Value))
-                    except:
-                        continue
-
-
-    def flood_fill(self, button):
-        x,y = button.x_cord,button.y_cord
-        #print(x, y)
-        for i in range(4):
-            if i == 0:
+            #x_cord, y_cord = bomb_location
+            #for x in range(x_cord-1, x_cord+2):
+                #for y in range(y_cord-1, y_cord+2):
+            for x,y in self.get_surround_coords(bomb_location):
                 try:
-                    new_x, new_y = x-1, y
-                    assert (new_x >= 0 and new_x < self.grid_size[0])
-                    new_button = self.grid[new_x][new_y]
-                    val = new_button.Value
+                    assert 0 <= x and x < self.grid_size[0]
+                    assert 0 <= y and y < self.grid_size[1]
 
-                    if val == 0:
-                        new_button.button_click()
-                        #self.flood_fill(new_button)
-                    elif val != -1:
-                        new_button.button_side_click()
+                    val = self.grid[x][y].Value
+                    if val != -1:
+                        self.grid[x][y].Value += 1
+                        #print('Button at ( {}, {} ) had value changed from {} to {}'.format(x, y, val, self.grid[x][y].Value))
                 except:
                     continue
 
-            if i == 1:
-                # Look on the y- side of tile
-                try:
-                    new_x, new_y = x+1, y
-                    assert (0 <= new_x < self.grid_size[0])
 
-                    new_button = self.grid[new_x][new_y]
-                    val = new_button.Value
+    def get_surround_coords(self, coord):
+        coord_list = []
 
-                    if val == 0:
-                        new_button.button_click()
-                        #self.flood_fill(new_button)
-                    elif val != -1:
-                        new_button.button_side_click()
-                except:
-                    continue
+        x_cord, y_cord = coord
+        for x in range(x_cord-1, x_cord+2):
+            for y in range(y_cord-1, y_cord+2):
+                coord_list.append((x,y))
 
-            if i == 2:
-                # Look on the x+ side of tile
-                try:
-                    new_x, new_y = x, y+1
-                    assert (0 <= new_y < self.grid_size[1])
+        return coord_list
 
-                    new_button = self.grid[new_x][new_y]
-                    val = new_button.Value
+    def flood_fill_v2(self, button):
+        coords = button.x_cord,button.y_cord
+        coords = self.get_surround_coords(coords)
 
-                    if val == 0:
-                        new_button.button_click()
-                        #self.flood_fill(new_button)
-                    elif val != -1:
-                        new_button.button_side_click()
-                except:
-                    continue
+        for new_x,new_y in coords:
+            try:
+                #new_x, new_y = x-1, y
+                assert (0 <= new_x < self.grid_size[0])
+                assert (0 <= new_y < self.grid_size[1])
+                new_button = self.grid[new_x][new_y]
+                val = new_button.Value
 
-            if i == 3:
-                # Look on the x- side of tile
-                try:
-                    new_x, new_y = x, y-1
-                    assert (0 <= new_y < self.grid_size[1])
-
-                    new_button = self.grid[new_x][new_y]
-                    val = new_button.Value
-
-                    if val == 0:
-                        new_button.button_click()
-                        #self.flood_fill(new_button)
-                    elif val != -1:
-                        new_button.button_side_click()
-                except:
-                    continue
+                if val == 0:
+                    new_button.button_click()
+                    #self.flood_fill(new_button)
+                elif val != -1:
+                    new_button.button_side_click()
+            except:
+                continue
 
     def show_all_nums(self):
         for smal_list in self.grid:
@@ -258,7 +224,7 @@ def gather_images():
 
 class Bottom_frame:
     def __init__(self, root, class_ref):
-        frame = tk.LabelFrame(root, bd=4)
+        frame = tk.LabelFrame(root, bd=7)
 
         solve_button = tk.Button(frame, text='SOLVE', bd=3, relief='raised', command=class_ref.solve_game)
         solve_button.pack(side=tk.LEFT, padx=10, ipadx=10, ipady=1, pady=3)
@@ -284,9 +250,41 @@ class Bottom_frame:
                         ipadx=class_ref.grid_size[1]*5
         )
 
+def get_smile_img():
+    smile_img = Image.open('assets/smile.png')
+    smile_img = ImageTk.PhotoImage(smile_img.resize((20,20), Image.ANTIALIAS))
+
+    return smile_img
+
+class Top_frame:
+    def __init__(self, root, class_ref):
+        frame = tk.LabelFrame(root, bd=7)
+        frame.grid(row=0,
+                        ipady=0,
+                        columnspan=class_ref.grid_size[1],
+                        ipadx=class_ref.grid_size[1]*10
+        )
+
+
+
+        self.t = 'HighScore: '
+        self.label = tk.Label(frame, text=self.t, font='Times 15', relief='sunken')
+        self.label.grid(row=0, column=0, padx=10, ipadx=10, ipady=1, pady=3)
+
+        self.smile_img = Image.open('assets/smile.png')
+        self.smile_img = ImageTk.PhotoImage(self.smile_img.resize((30,25), Image.ANTIALIAS))
+
+        self.class_ref = class_ref
+        #self.smile_img = get_smile_img()
+        self.smile_button = tk.Button(frame, image=self.smile_img, command=self.smile_click)
+        self.smile_button.grid(row=0, column=1, padx=10, ipady=1, pady=3)
+
+    def smile_click(self):
+        self.class_ref.reset_game()
 
 if __name__ == '__main__':
     root = tk.Tk()
+    root.resizable(width=False, height=False)
 
     img = gather_images()
     mine = Mine_Sweeper(root, img, game_mode='easy')

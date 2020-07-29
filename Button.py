@@ -24,17 +24,26 @@ class Button(tk.Button):
     def button_click(self):
         if self.isPressed is False:
             self.isPressed = True
-            self.configure(relief='groove', state='disabled', bg='#BDBDBD', borderwidth=3, highlightbackground='#808080')
+            self.configure(relief='groove', state='disabled', borderwidth=3, highlightbackground='#808080')
+            self.set_bg()
             if self.Value == 0:
-                self.class_ref.flood_fill(self)
+                self.class_ref.flood_fill_v2(self)
             self.button_reveal()
 
 
     def button_side_click(self):
         self.isPressed = True
-        self.configure(relief='groove', state='disabled', bg='#BDBDBD', borderwidth=3, highlightbackground='#808080')
+        self.configure(relief='groove', state='disabled', borderwidth=3, highlightbackground='#808080')
+        self.set_bg()
         self.button_reveal()
         #self.configure(text=str(self.Value))
+
+    def set_bg(self):
+        if self.Value >= 0:
+            self.configure(bg='#BDBDBD')
+        else:
+            self.configure(bg='#DC143C')
+
     
     def button_reveal(self):
         val = self.Value
@@ -43,12 +52,21 @@ class Button(tk.Button):
 
     def right_click(self, event):
         if self.isPressed == False:
-            if self.Flaged == True:
+            if self.Flaged == False and self.class_ref.flag_count > 0:
+                flag_img = self.image_dict[9]
+                event.widget.configure(image=flag_img)
+                self.Flaged = True
+                #print('Class has this many flags {}'.format(self.class_ref.flag_count))
+                self.class_ref.flag_count -= 1
+            elif self.Flaged == True:
+                self.Flaged = False
                 null = self.image_dict[0]
                 event.widget.configure(image=null)
-                self.Flaged = False
-            else:
-                img = self.image_dict[9]
-                event.widget.configure(image=img)
-                self.Flaged = True
+                self.class_ref.flag_count += 1
+            #else:
+                #null = self.image_dict[0]
+                #event.widget.configure(image=null)
+                #self.Flaged = False
+                #print('Class has this many flags {}'.format(self.class_ref.flag_count))
+                #self.class_ref.flag_count += 1
             
