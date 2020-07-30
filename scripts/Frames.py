@@ -6,104 +6,74 @@ import time
 class Bottom_frame:
     """ The bottom frame of the mine sweeper game """
     def __init__(self, root, class_ref):
-        self.frame = tk.LabelFrame(root, bd=7)
+        # Define a frame to place all the widgets onto. 
+        self.frame = tk.LabelFrame(root,bd=7)
 
+        # get the total ammount of flags from :cls: mine_sweeper 
         self.flag_count = class_ref.flag_count
+        # get the flag image
         self.flag_img = get_flag_img()
+        # define a flag label that indicates the ammount of mines on field. 
+        self.flag_label = tk.Label(self.frame,
+                                   image=self.flag_img,
+                                   text=': {}'.format(self.flag_count),
+                                   compound='left',
+                                   relief='ridge'
+        )
+        # Place the flag label onto the pre-defined frame
+        self.flag_label.pack(side=tk.LEFT,
+                             padx=18,
+                             ipadx=8,
+                             ipady=1,
+                             pady=1
+        )
 
-        self.flag_label = tk.Label(self.frame, image=self.flag_img, text=': {}'.format(self.flag_count), compound='left', relief='ridge')
-        self.flag_label.pack(side=tk.LEFT, padx=18, ipadx=8, ipady=1, pady=1)
-
+        # get the smile image
         self.smile_img = get_smile_img((30,22))
-        self.smile_button = tk.Button(self.frame, image=self.smile_img, bd=3, relief='raised', command=self.smile_click)
-        self.smile_button.pack(side=tk.LEFT, padx=18, ipady=1, pady=1)
+        # define the smile button that resets the game whenever the player clicks on it. 
+        self.smile_button = tk.Button(self.frame,
+                                      image=self.smile_img,
+                                      bd=3,
+                                      relief='raised',
+                                      command=self.smile_click
+        )
+        # put the smile button inside the pre-defined frame
+        self.smile_button.pack(side=tk.LEFT,
+                               padx=18,
+                               ipady=1,
+                               pady=1
+        )
 
-        self.solve_button = tk.Button(self.frame, text='SOLVE', bd=3, relief='raised', command=class_ref.solve_game)
-        self.solve_button.pack(side=tk.LEFT, padx=18, ipadx=10, ipady=1, pady=1)
+        # Create a solve button that solves the game whenever the player clicks it. 
+        self.solve_button = tk.Button(self.frame,
+                                      text='SOLVE',
+                                      bd=3,
+                                      relief='raised',
+                                      command=class_ref.solve_game
+        )
 
-        
+        # place the solve button onto the pre-defined frame. 
+        self.solve_button.pack(side=tk.LEFT,
+                               padx=18,
+                               ipadx=10,
+                               ipady=1,
+                               pady=1
+        )
 
-        #self.retry_button = tk.Button(self.frame,
-        #                              text='RETRY',
-        #                              bd=3,
-        #                              relief='raised',
-        #                              command=class_ref.reset_game
-        #)
-        
-        #self.retry_button.pack(side=tk.RIGHT,
-        #                   padx=10,
-        #                   ipadx=10,
-        #                   ipady=1,
-        #                   pady=3
-        #)
-
-
+        # Place the pre-defined frame onto the main screen. 
         self.frame.grid(row=class_ref.grid_size[0]+1,
                         ipady=0,
                         columnspan=class_ref.grid_size[1],
                         ipadx=class_ref.grid_size[0]*0
         )
 
+        # get a reference for the main mine_sweeper class. 
         self.class_ref = class_ref
 
     def smile_click(self):
-        """ Literally updates the game """
+        """ Function linked to the smile button. Resets the game when clicked. """
         self.class_ref.reset_game()
     
     def flag_clicked(self):
-        """ Updates the flag-remaining counter """
+        """ Function linked to the flag label. Updates the flag-remaining counter """
         self.flag_label.configure(text=': {}'.format(self.class_ref.flag_count))
-
-class Top_frame:
-    """ The top frame of the mine sweeper game"""
-    def __init__(self, root, class_ref):
-        frame = tk.LabelFrame(root, bd=7)
-        frame.grid(row=0,
-                        ipady=0,
-                        columnspan=class_ref.grid_size[1],
-                        ipadx=class_ref.grid_size[1]*9
-        )
-
-        self.mine_indicator = tk.Label(frame, )
-        self.flag_remaining = class_ref.flag_count
-        self.score_count = tk.Label(frame, text='FLAGS: {}'.format(self.flag_remaining), font='TIMES 10', relief='sunken', fg='#333333' )
-        self.score_count.pack(side=tk.LEFT, padx=10, ipadx=10, ipady=1, pady=3)#.grid(row=0, column=0, padx=10, ipadx=10, ipady=1, pady=3)
-
-        #self.timer = 996
-       # self.time_label = tk.Label(frame, text='{}'.format(self.timer), font='10', relief='sunken')
-        #self.time_label.pack(side=tk.LEFT, padx=10, ipadx=10, ipady=1, pady=3)
-
-        #self.t = 'HighScore: '
-        #self.label = tk.Label(frame, text=self.t, font='Times 15', relief='sunken')
-        #self.label.grid(row=0, column=0, padx=10, ipadx=10, ipady=1, pady=3)
-
-        #self.smile_img = Image.open('assets/smile.png')
-        self.smile_img = get_smile_img()#ImageTk.PhotoImage(self.smile_img.resize((30,25), Image.ANTIALIAS))
-
-        self.class_ref = class_ref
-        #self.smile_img = get_smile_img()
-        self.smile_button = tk.Button(frame, image=self.smile_img, command=self.smile_click)
-        self.smile_button.pack(side=tk.RIGHT, padx=10, ipady=1, pady=3)#.grid(row=0, column=1, padx=10, ipady=1, pady=3)
-
-        time_thread = threading.Thread(target=self.start_timer)
-        time_thread.start()
-
-    def smile_click(self):
-        """ Literally updates the game """
-        self.class_ref.reset_game()
-
-    def flag_clicked(self):
-        """ Updates the flag-remaining counter """
-        self.score_count.configure(text='FLAGS: {}'.format(self.class_ref.flag_count))
-
-    def start_timer(self):
-        i = self.timer
-        while i < 999: 
-            self.timer += 1
-            #print('HELLO')
-            self.update_timer()
-            i += 1
-            time.sleep(1)
-
-    def update_timer(self):
-        self.time_label.configure(text='{}'.format(self.timer))
