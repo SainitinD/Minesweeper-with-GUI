@@ -4,6 +4,7 @@ def gather_images(image_size=(20,20)):
     """ Imports all the Tile, bomb, flag images into a dictionary and returns it """
     img_dict = {}
 
+    # Get the normal numbers
     null_img = Image.open('assets/null.png')
     null_img = ImageTk.PhotoImage(null_img.resize(image_size, Image.ANTIALIAS))
 
@@ -37,6 +38,31 @@ def gather_images(image_size=(20,20)):
     flag_img = Image.open('assets/flag.png')
     flag_img = ImageTk.PhotoImage(flag_img.resize(image_size, Image.ANTIALIAS))
 
+    # Get the golden numbers
+    gold_one_img = Image.open('assets/1_gold.png')
+    gold_one_img = ImageTk.PhotoImage(gold_one_img.resize(image_size, Image.ANTIALIAS))
+
+    gold_two_img = Image.open('assets/2_gold.png')
+    gold_two_img = ImageTk.PhotoImage(gold_two_img.resize(image_size, Image.ANTIALIAS))
+
+    gold_three_img = Image.open('assets/3_gold.png')
+    gold_three_img = ImageTk.PhotoImage(gold_three_img.resize(image_size, Image.ANTIALIAS))
+
+    gold_four_img = Image.open('assets/4_gold.png')
+    gold_four_img = ImageTk.PhotoImage(gold_four_img.resize(image_size, Image.ANTIALIAS))
+
+    gold_five_img = Image.open('assets/5_gold.png')
+    gold_five_img = ImageTk.PhotoImage(gold_five_img.resize(image_size, Image.ANTIALIAS))
+
+    gold_six_img = Image.open('assets/6_gold.png')
+    gold_six_img = ImageTk.PhotoImage(gold_six_img.resize(image_size, Image.ANTIALIAS))
+
+    gold_seven_img = Image.open('assets/7_gold.png')
+    gold_seven_img = ImageTk.PhotoImage(gold_seven_img.resize(image_size, Image.ANTIALIAS))
+
+    gold_eight_img = Image.open('assets/8_gold.png')
+    gold_eight_img = ImageTk.PhotoImage(gold_eight_img.resize(image_size, Image.ANTIALIAS))
+
     img_dict[0] = null_img
     img_dict[1] = one_img
     img_dict[2] = two_img
@@ -48,6 +74,17 @@ def gather_images(image_size=(20,20)):
     img_dict[8] = eight_img     
     img_dict[-1] = mine_img
     img_dict[9] = flag_img
+
+    # Golden Numbers
+    img_dict['1_gold'] = gold_one_img
+    img_dict['2_gold'] = gold_two_img
+    img_dict['3_gold'] = gold_three_img
+    img_dict['4_gold'] = gold_four_img
+    img_dict['5_gold'] = gold_five_img
+    img_dict['6_gold'] = gold_six_img
+    img_dict['7_gold'] = seven_img
+    img_dict['8_gold'] = gold_eight_img     
+
     
     return img_dict
 

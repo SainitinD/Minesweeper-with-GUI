@@ -10,6 +10,6 @@ if __name__ == '__main__':
     root.iconbitmap('icon.ico')
 
     img = gather_images()
-    mine = Mine_Sweeper(root, img, game_mode='easy', bd=4)
+    mine = Mine_Sweeper(root, img, game_mode='hard', bd=4)
 
     mine.mainloop()
