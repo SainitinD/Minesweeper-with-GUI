@@ -56,8 +56,12 @@ class Button(tk.Button):
             self.configure(relief='groove', state='disabled', borderwidth=3, highlightbackground='#808080')
             self._set_bg()
             self.reveal()
-            self.update_flag_count()
+            if self.isFlaged:
+                self.update_flag_count()
             self.change_score()
+        else:
+            self.effect_right_click()
+           # print(self.minesweeper.score)
 
     def change_score(self):
         """ Called whenever a button is clicked. Changes the score in the mine_sweeper class"""
@@ -114,6 +118,19 @@ class Button(tk.Button):
             # Updates the flag counter on :cls: Bottom frame through :cls: MineSweeper
             self.minesweeper.bottom_frame.flag_clicked()
 
+    def effect_right_click(self):
+        if self.isPressed == False and self.Value == -1:
+            if self.isFlaged == False and self.minesweeper.flag_count > 0:
+                flag_img = self.image_dict[9]
+                self.configure(image=flag_img)
+                self.isFlaged = True
+                self.minesweeper.update_flagcount(-1)
+            elif self.isFlaged == True:
+                null = self.image_dict[0]
+                self.configure(image=null)
+                self.isFlaged = False
+                self.minesweeper.update_flagcount(1)
+            self.minesweeper.bottom_frame.flag_clicked()
     def update_flag_count(self):
         """ If a button is flagged and then clicked.
         This method makes sure to update the :attr: flag_remaining of :cls: mine_sweeper and :cls: top_frame. """
@@ -128,5 +145,5 @@ class Button(tk.Button):
         if not self.isGold or self.Value < 1:
             return
         else:
-            effect_num = random.randint(1,3)
+            effect_num = random.randint(1,10)
             self.minesweeper.generate_effect(self, effect_num)

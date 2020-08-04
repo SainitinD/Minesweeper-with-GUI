@@ -23,10 +23,13 @@ class Mine_Sweeper(tk.Frame):
         # The main root.
         self.root = root
 
-        # Get the grid size based on the chosen game-mode
+        # The game mode
+        self.game_mode = game_mode
+
+        # Get the grid size based on the chosen game_mode
         self.grid_size = self.game_size[game_mode]
 
-        # Get the maximum no. of bombs for the specified gamemode
+        # Get the maximum no. of bombs for the specified game_mode
         self.num_of_bombs = self.bomb_max[game_mode]
 
         # Contains a list to contain all the bomb locations
@@ -54,7 +57,7 @@ class Mine_Sweeper(tk.Frame):
         # A bool to check if the game is over or not.
         self.is_game_over = False
 
-        self.effect_count = round(self.num_of_bombs * .15)
+        self.effect_count = round(self.num_of_bombs * 0.1)
 
         self.effect_location_list = set()
 
@@ -69,6 +72,7 @@ class Mine_Sweeper(tk.Frame):
         self.update_button_scores()
         self.create_magic_nums(self.effect_count)
         #self.show_all_bombs()
+        self.get_game_description()
 
     
     def create_grid(self):
@@ -102,6 +106,7 @@ class Mine_Sweeper(tk.Frame):
                 small_list.append(button)
             self.grid.append(small_list)
 
+
     def create_bombs(self):
         """ Updates the object's grid with bombs """
         for i in range(self.num_of_bombs):
@@ -115,12 +120,16 @@ class Mine_Sweeper(tk.Frame):
             # Add the bomb's location to the bomb locations list
             self.bomb_location_list.append((x_cord, y_cord))
 
+
     def create_magic_nums(self, max_num):
         """ Create the magic numbers """
         for i in range(max_num):
             x, y = self._get_random_magic_coord()
+            self.effect_location_list.add((x,y))
             button = self.grid[x][y]
             button.isGold = True
+            #print(x,y)
+
 
     def _get_random_magic_coord(self):
         """ Creates a random x,y coordinate on the grid.
@@ -136,7 +145,6 @@ class Mine_Sweeper(tk.Frame):
                 button = self.grid[random_x][random_y]
                 assert button.Value > 0
             except:
-                print(button.get_coords())
                 continue
 
             coord = (random_x, random_y)
@@ -145,6 +153,8 @@ class Mine_Sweeper(tk.Frame):
                 return coord
             else:
                 continue
+
+
     def _get_random_coord(self):
         """ Creates a random x,y coordinate on the grid.
             Utilized by :meth: create_bombs to create bombs on grid. 
@@ -163,6 +173,7 @@ class Mine_Sweeper(tk.Frame):
             else:
                 continue
 
+
     def update_button_scores(self):
         """ For each bomb_location from bomb_location_list, this function increases the surrounding (1-tile) button's value.
             FYI: The higher the value a tile shows, the greater the ammount of bombs surrounding it.
@@ -177,7 +188,7 @@ class Mine_Sweeper(tk.Frame):
                     continue
 
 
-    def get_surround_coords(self, coord):
+    def get_surround_coords(self, coord, sub=-1, add=2):
         """ Creates a generator containting the indices of tiles that surround the :arg: coord.
             Each iteration it sends a coordinate of a tile around the initial coord. 
         
@@ -190,8 +201,8 @@ class Mine_Sweeper(tk.Frame):
         x_cord, y_cord = coord
         #upd_coord = set()
         #upd_coord = {yieldfor x in range(x_cord-1, x_cord+2) for y in range(y_cord-1, y_cord+2)}
-        for x in range(x_cord-1, x_cord+2):
-            for y in range(y_cord-1, y_cord+2):
+        for x in range(x_cord+sub, x_cord+add):
+            for y in range(y_cord+sub, y_cord+add):
                 # Make sure the surrounding coords isn't negatives.
                 try:
                     assert 0 <= x and x < self.grid_size[0]
@@ -199,6 +210,7 @@ class Mine_Sweeper(tk.Frame):
                     yield x,y
                 except:
                     continue
+
 
     def flood_fill_v2(self, button):
         """ The main brains of the minesweeper. This is my implementation of the flood-fill algorithm. 
@@ -220,17 +232,18 @@ class Mine_Sweeper(tk.Frame):
                 new_button = self.grid[new_x][new_y]
                 val = new_button.Value
                 if val == 0:
-                    new_button.isGold == False
                     new_button.left_click()     
                 elif val != -1:
                     new_button.left_click()
             except:
                 continue
 
+
     def reset_game(self):
         """ This function is called whenever the smiley face is clicked. Basically resets the game. """
         self._reset_values()
         self.main()
+
 
     def _reset_values(self):
         """ Internal function used to reset values in the mine_sweeper class. """
@@ -247,6 +260,7 @@ class Mine_Sweeper(tk.Frame):
         self.is_game_over = False
         self.flag_count = self.num_of_bombs
 
+
     def solve_game(self):
         """ Called whenever the solve button is clicked.
             Basically, iterates through each button and reveals its value with its appropriate image.
@@ -257,6 +271,7 @@ class Mine_Sweeper(tk.Frame):
                     button.solve_button_clicked()#.button_side_click()
             self.is_game_over = True
 
+
     def game_over(self):
         """ Called whenever the player clicks on a bomb.
             Displays 'GameOver' message and reveals all bombs
@@ -266,12 +281,14 @@ class Mine_Sweeper(tk.Frame):
         self._reveal_bombs('lost')
         self.is_game_over = True
 
+
     def _disable_buttons(self):
         """ Used internally inside the game_over function.
             Disables all the buttons inside the grid.
         """
         for button in self._getbutton():
             button.configure(state='disabled')
+
 
     def _getbutton(self):
         """ A generator that yields a each button from the self.grid attribute.
@@ -281,6 +298,7 @@ class Mine_Sweeper(tk.Frame):
             for button in small_list:
                 yield button
 
+
     def _game_won(self):
         """ Called when the player successfully finds all the numbers without clicking on any mines.
             Displays 'YOU WON' message and reveals the bombs with a green background.
@@ -289,12 +307,14 @@ class Mine_Sweeper(tk.Frame):
         self._reveal_bombs('won')
         self.is_game_over = True
 
+
     def check_game(self):
         """ Called whenever a button is clicked. If the mine_sweeper's
             score attribute is zero or lower, indicates the player has won. 
         """
         if self.score <= 0:
             self._game_won()
+
 
     def _reveal_bombs(self, result='won'):
         """ Used internally to reveal the bombs and set their backgrounds depending on result's value.
@@ -306,14 +326,18 @@ class Mine_Sweeper(tk.Frame):
             button.set_bomb_green(result)
             button.reveal()
 
+
     def get_score(self):
         return self.score
 
+
     def update_score(self, new_score):
-        self.score += new_score
+        self.score -= new_score
+
 
     def get_flagcount(self):
         return self.flag_count
+
 
     def update_flagcount(self, new_flagcount):
         self.flag_count += new_flagcount
@@ -341,18 +365,24 @@ class Mine_Sweeper(tk.Frame):
             button.isGold = False
             button.effect_click()
 
+
     def box_effect(self, button):
         coords = button.get_coords()
-        for x,y in self.get_surround_coords(coords):
+        random_effect = random.randint(2,4)
+        sub = -(random_effect) + 1
+        add = random_effect
+        for x,y in self.get_surround_coords(coords, sub, add):
             button = self.grid[x][y]
             button.isGold = False
             button.effect_click()
         print('BOX-REVEAL')
 
+
     def button_generator(self):
         for row in self.grid:
             for button in row:
                 yield button
+
 
     def same_num_effect(self, button):
         value = button.Value
@@ -366,18 +396,21 @@ class Mine_Sweeper(tk.Frame):
 
         print('SAME-NUM-REVEAL')
 
+
     def generate_effect(self, button, effect_num):
-        if effect_num == 1:
-            self.cross_reveal(button)
-        elif effect_num == 2:
+        if 0 < effect_num < 7:
             self.box_effect(button)
+        elif 6 < effect_num < 9:
+            self.cross_reveal(button)
         else:
             self.same_num_effect(button)
+
 
     def show_all_bombs(self):
         for bomb_loc in self.bomb_location_list:
             x,y = bomb_loc
             self.grid[x][y].reveal()
+
 
     def effect_flood_fill(self, button):
         if button.Value != 0:
@@ -385,6 +418,5 @@ class Mine_Sweeper(tk.Frame):
         else:
             self.flood_fill_v2(button)
 
-
-
-
+    def get_game_description(self):
+        print('GAME MODE: {} \nTotal Bomb Count: {} \nTotal Magic Numbers: {} \nTotal Flag Count: {} \nInitial Score: {}'.format(self.game_mode, len(self.bomb_location_list), len(self.effect_location_list), len(self.bomb_location_list), self.score))
