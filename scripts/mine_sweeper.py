@@ -13,9 +13,14 @@ class Mine_Sweeper(tk.Frame):
 
     game_size = {'easy': (8,10),
                  'medium': (14,18),
-                 'hard': (20,24)}
+                 'hard': (20,24),
+                 'expert':(24,35)}
 
-    bomb_max = {'easy': 10, 'medium': 40, 'hard': 99}
+    bomb_max = {'easy': 10, 'medium': 40, 'hard': 99, 'expert':159}
+
+    box_effect_dict = {'easy': 2, 'medium':3, 'hard':4, 'expert':4}
+
+    cross_reveal_dict = {'easy': 1, 'medium': 1, 'hard':3, 'expert':3}
 
     def __init__(self, root, image_dict, game_mode='easy', *args, **kwargs):
         super().__init__(root, *args, **kwargs)
@@ -57,9 +62,11 @@ class Mine_Sweeper(tk.Frame):
         # A bool to check if the game is over or not.
         self.is_game_over = False
 
-        self.effect_count = round(self.num_of_bombs * 0.1)
+        self.effect_count = round((self.num_of_bombs * 0.05) + 2.5)
 
         self.effect_location_list = set()
+
+        self.isFirst = False
 
         # Assemble the game
         self.main()
@@ -70,9 +77,9 @@ class Mine_Sweeper(tk.Frame):
         self.create_grid()
         self.create_bombs()
         self.update_button_scores()
-        self.create_magic_nums(self.effect_count)
+        #self.create_magic_nums(self.effect_count)
         #self.show_all_bombs()
-        self.get_game_description()
+        #self.get_game_description()
 
     
     def create_grid(self):
@@ -109,7 +116,12 @@ class Mine_Sweeper(tk.Frame):
 
     def create_bombs(self):
         """ Updates the object's grid with bombs """
-        for i in range(self.num_of_bombs):
+        num_of_bombs = self.num_of_bombs - len(self.bomb_location_list)
+        
+        if num_of_bombs < 1:
+            return
+
+        for i in range(num_of_bombs):
             # Get a random coordinate to put the bomb. 
             x_cord, y_cord = self._get_random_coord()
             
@@ -127,7 +139,7 @@ class Mine_Sweeper(tk.Frame):
             x, y = self._get_random_magic_coord()
             self.effect_location_list.add((x,y))
             button = self.grid[x][y]
-            button.isGold = True
+            button.isMagic = True
             #print(x,y)
 
 
@@ -173,6 +185,13 @@ class Mine_Sweeper(tk.Frame):
             else:
                 continue
 
+    def zero_button_scores(self):
+        """ Zeros all the button scores. """
+        for button in self.button_generator():
+            if button.Value != -1:
+                button.Value = 0
+            else:
+                continue
 
     def update_button_scores(self):
         """ For each bomb_location from bomb_location_list, this function increases the surrounding (1-tile) button's value.
@@ -181,7 +200,8 @@ class Mine_Sweeper(tk.Frame):
         for bomb_location in self.bomb_location_list:
             for x,y in self.get_surround_coords(bomb_location):
                 try:
-                    val = self.grid[x][y].Value
+                    button = self.grid[x][y]
+                    val = button.Value
                     if val != -1:
                         self.grid[x][y].Value += 1
                 except:
@@ -191,9 +211,14 @@ class Mine_Sweeper(tk.Frame):
     def get_surround_coords(self, coord, sub=-1, add=2):
         """ Creates a generator containting the indices of tiles that surround the :arg: coord.
             Each iteration it sends a coordinate of a tile around the initial coord. 
+
+            It is also intended to be used by the :meth: box-effect to reveal numbers surrounding
+            the magic number. 
         
         Args:
-            coord (tuple): A tuple containing x,y coords of the function. 
+            coord (tuple): A tuple containing x,y coords of the function.
+            sub (int): A number that lets us determine how many rows to search
+            add (int): A number that lets us determine how many columns to search
         Returns:
             coord_list (list of tuples): A list of tuples containing indices of surrounding tiles. 
         """
@@ -232,9 +257,15 @@ class Mine_Sweeper(tk.Frame):
                 new_button = self.grid[new_x][new_y]
                 val = new_button.Value
                 if val == 0:
-                    new_button.left_click()     
+                    if new_button.isMagic == False:
+                        new_button.left_click()
+                    else:
+                        new_button.make_button_magic()    
                 elif val != -1:
-                    new_button.left_click()
+                    if new_button.isMagic == False:
+                        new_button.left_click()
+                    else:
+                        new_button.make_button_magic()
             except:
                 continue
 
@@ -243,6 +274,7 @@ class Mine_Sweeper(tk.Frame):
         """ This function is called whenever the smiley face is clicked. Basically resets the game. """
         self._reset_values()
         self.main()
+        self.isFirst = False
 
 
     def _reset_values(self):
@@ -328,27 +360,38 @@ class Mine_Sweeper(tk.Frame):
 
 
     def get_score(self):
+        """ A getter method for getting the score attribute """
         return self.score
 
 
     def update_score(self, new_score):
+        """ A update method for updating the score attribute """
         self.score -= new_score
 
 
     def get_flagcount(self):
+        """ A getter method for getting the flag_count attribute """
         return self.flag_count
 
 
     def update_flagcount(self, new_flagcount):
+        """ A update method for updating the flag_count attribute """
         self.flag_count += new_flagcount
 
 
     def cross_reveal(self, button):
-        """ A Effect. Clears all the buttons in the same row and column as :arg: button """
+        """ This method applies the cross-reveal effect.
+            Clears all the buttons in the same row and column as :arg: button.
+
+        Args:
+            button (Button obj): A Button obj reference chosen as the magic number. 
+        """
+
+        # Get the magic button's coordinates
         x,y = button.get_coords()
 
-        # Create a generator that gets button_rows from self.grid
-        button_row = (button_row for button_row in self.grid)
+        # # Create a generator that gets button_rows from self.grid
+        # button_row = (button_row for button_row in self.grid)
 
         # Reveal all the buttons in the same column as :arg: button
         for button_row in self.grid:
@@ -356,67 +399,137 @@ class Mine_Sweeper(tk.Frame):
                 if button.y_cord != y:
                     continue
                 else:
-                    button.isGold = False
+                    button.isMagic = False
                     button.effect_click()
         print('CROSS-REVEAL')
 
         # Reveal all the buttons in the same row as :arg: button
         for button in self.grid[x]:
-            button.isGold = False
+            button.isMagic = False
             button.effect_click()
 
 
     def box_effect(self, button):
-        coords = button.get_coords()
-        random_effect = random.randint(2,4)
+        """ The method that creates the box reveal effect in the minesweeper game.
+
+            When this method gets called, the method randomly reveals a 3x3 or 4x4 or 5x5
+            sub-grid of buttons around the initial :arg: button.
+
+        Args:
+            button (Button): A reference of a button object containing the magic attribute. 
+
+        """
+        # Get the max_lim of box_reveal size based on game_mode. 
+        max_lim = self.box_effect_dict[self.game_mode]
+
+        # Randomly choose a box size
+        random_effect = random.randint(2,max_lim)
+
+        # Create the sub and add parameters for the :meth: get_surround_coords
         sub = -(random_effect) + 1
         add = random_effect
+
+        coords = button.get_coords()
+
+        # Perform the box reveal. 
         for x,y in self.get_surround_coords(coords, sub, add):
             button = self.grid[x][y]
-            button.isGold = False
+            button.isMagic = False
             button.effect_click()
         print('BOX-REVEAL')
 
 
     def button_generator(self):
+        """ A generator function that returns each button from the grid. 
+            Created for optimization.
+            
+            Used by the :meth: reset_game to efficiently reset the game. 
+        """
         for row in self.grid:
             for button in row:
                 yield button
 
 
     def same_num_effect(self, button):
+        """ Iterate through each button on the grid and if the Value attribute of that button is equal to the Value of 
+            the initial :arg: button, then reveal that button. 
+        """
         value = button.Value
         for button in self.button_generator():
             if button.Value != value:
                 continue
             else:
-                button.isGold = False
+                button.isMagic = False
                 button.effect_click()
-        button.isGold = False
+        button.isMagic = False
+        # coords = button.get_coords()
+        # max_lim = round(self.grid_size[0] * 0.4)
+        # sub = -(max_lim) + 1
+        # add = max_lim
+        # for x,y in self.get_surround_coords(coords, sub=sub, add=add):
+        #     if button.Value != value:
+        #         continue
+        #     else:
+        #         button = self.grid[x][y]
+        #         button.isMagic = False
+        #         button.effect_click()
+        # button.isMagic = False
 
         print('SAME-NUM-REVEAL')
 
 
     def generate_effect(self, button, effect_num):
-        if 0 < effect_num < 7:
-            self.box_effect(button)
-        elif 6 < effect_num < 9:
-            self.cross_reveal(button)
-        else:
+        """ The main method that gets called each time a magic number gets clicked.
+            This method randomly selects a effect and shows it on screen. 
+        """
+        if button.Value >= 4:
             self.same_num_effect(button)
+        else:
+            if 0 < effect_num < 7:
+                # self.same_num_effect(button)
+                self.box_effect(button)
+            else:
+                # self.same_num_effect(button)
+                self.cross_reveal(button)
+        # else:
+        #     self.same_num_effect(button)
 
 
     def show_all_bombs(self):
+        """ Used for dev testing. It just reveals all the bomb locations """
         for bomb_loc in self.bomb_location_list:
             x,y = bomb_loc
             self.grid[x][y].reveal()
 
 
     def effect_flood_fill(self, button):
+        """ Used when a magic button is clicked."""
         if button.Value != 0:
             return
         else:
             self.flood_fill_v2(button)
 
+    def clear_surrounding_bombs(self, button):
+        """ Used for the first click to clear some space for the player to start the game """
+        coords = button.get_coords()
+        #print(coords)
+        for x,y in self.get_surround_coords(coords):
+            button = self.grid[x][y]
+            print(x,y)
+            if button.Value == 0:
+                continue
+            else:
+                if button.Value == -1:
+                    button.Value = 0
+                    self.bomb_location_list.remove(button.get_coords())
+                    self.create_bombs()
+
+        self.zero_button_scores()
+        self.update_button_scores()
+        self.create_magic_nums(self.effect_count)
+        self.get_game_description()
+
+
     def get_game_description(self):
+        """ Used for dev testing. Gives out a printed game description"""
         print('GAME MODE: {} \nTotal Bomb Count: {} \nTotal Magic Numbers: {} \nTotal Flag Count: {} \nInitial Score: {}'.format(self.game_mode, len(self.bomb_location_list), len(self.effect_location_list), len(self.bomb_location_list), self.score))

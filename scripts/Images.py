@@ -63,6 +63,9 @@ def gather_images(image_size=(20,20)):
     gold_eight_img = Image.open('assets/8_gold.png')
     gold_eight_img = ImageTk.PhotoImage(gold_eight_img.resize(image_size, Image.ANTIALIAS))
 
+    gold_img = Image.open('assets/mystery.png')
+    gold_img = ImageTk.PhotoImage(gold_img.resize(image_size, Image.ANTIALIAS))
+
     img_dict[0] = null_img
     img_dict[1] = one_img
     img_dict[2] = two_img
@@ -83,7 +86,8 @@ def gather_images(image_size=(20,20)):
     img_dict['5_gold'] = gold_five_img
     img_dict['6_gold'] = gold_six_img
     img_dict['7_gold'] = seven_img
-    img_dict['8_gold'] = gold_eight_img     
+    img_dict['8_gold'] = gold_eight_img 
+    img_dict['mystery'] = gold_img    
 
     
     return img_dict

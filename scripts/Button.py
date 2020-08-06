@@ -31,24 +31,35 @@ class Button(tk.Button):
         self.isFlaged = False
 
         # Indicate whether this button has an effect or not
-        self.isGold = False
+        self.isMagic = False
 
 
     def left_click(self):
         """ Main method that gets called whenever a button gets clicked. """
-        if self.isPressed is False:
-            self.isPressed = True
-            self.configure(relief='groove', state='disabled', borderwidth=3, highlightbackground='#808080')
-            self._set_bg()
-            self.reveal()
-            self.update_flag_count()
-            if self.Value == -1:
-                self.minesweeper.game_over()
-                return
-            if self.Value == 0:
-                self.minesweeper.flood_fill_v2(self)
-            self.change_score()
-            self.golden_effect()
+        if self.isPressed is False and self.isFlaged == False:
+            if self.minesweeper.isFirst == True:
+                self.isPressed = True
+                self.configure(relief='groove', state='disabled', borderwidth=3, highlightbackground='#808080')
+                self._set_bg()
+                self.reveal()
+                self.update_flag_count()
+                if self.Value == -1:
+                    self.minesweeper.game_over()
+                    return
+                if self.Value == 0:
+                    self.minesweeper.flood_fill_v2(self)
+                self.change_score()
+                self.magic_effect()
+            else:
+                self.minesweeper.clear_surrounding_bombs(self)
+                self.minesweeper.isFirst = True
+                self.left_click()
+
+
+
+    def make_button_magic(self):
+        self.configure(image=self.image_dict['mystery'])
+
 
     def effect_click(self):
         if self.Value != -1 and self.isPressed == False:
@@ -75,6 +86,7 @@ class Button(tk.Button):
         self.reveal()
         self._set_bg()
 
+
     def _set_bg(self):
         """ Used internally to set the background color of tiles.
         If the button is a bomb, set the color to red. Otherwise, set the bg color to gray."""
@@ -83,6 +95,7 @@ class Button(tk.Button):
         else:
             self.configure(bg='#DC143C')
 
+
     def set_bomb_green(self, result='won'):
         """ Sets the bomb's background color to green when the player wins the game. """
         if result == 'won':
@@ -90,16 +103,18 @@ class Button(tk.Button):
         else:
             self.configure(bg='#DC143C')
     
+
     def reveal(self):
         """ Reveal the button. Called by :meth: left_click and :meth: button_side_click """
         val = self.Value
-        if not self.isGold:
+        if not self.isMagic:
             img = self.image_dict[val]
         else:
             key = str(val) + '_gold'
             img = self.image_dict[key]
         self.configure(image=img)
         self.configure(state='disabled', relief='groove')
+
 
     def right_click(self, event):
         """ Place a flag on the button if the player right-clicks it """
@@ -118,6 +133,7 @@ class Button(tk.Button):
             # Updates the flag counter on :cls: Bottom frame through :cls: MineSweeper
             self.minesweeper.bottom_frame.flag_clicked()
 
+
     def effect_right_click(self):
         if self.isPressed == False and self.Value == -1:
             if self.isFlaged == False and self.minesweeper.flag_count > 0:
@@ -125,11 +141,11 @@ class Button(tk.Button):
                 self.configure(image=flag_img)
                 self.isFlaged = True
                 self.minesweeper.update_flagcount(-1)
-            elif self.isFlaged == True:
-                null = self.image_dict[0]
-                self.configure(image=null)
-                self.isFlaged = False
-                self.minesweeper.update_flagcount(1)
+            # elif self.isFlaged == True:
+            #     null = self.image_dict[0]
+            #     self.configure(image=null)
+            #     self.isFlaged = False
+            #     self.minesweeper.update_flagcount(1)
             self.minesweeper.bottom_frame.flag_clicked()
     def update_flag_count(self):
         """ If a button is flagged and then clicked.
@@ -138,11 +154,14 @@ class Button(tk.Button):
             self.minesweeper.update_flagcount(1)
             self.minesweeper.bottom_frame.flag_clicked()
 
+
     def get_coords(self):
+        """ Used externally to retrieve a button's coordinates """
         return self.x_cord, self.y_cord
 
-    def golden_effect(self):
-        if not self.isGold or self.Value < 1:
+
+    def magic_effect(self):
+        if not self.isMagic or self.Value < 1:
             return
         else:
             effect_num = random.randint(1,10)
